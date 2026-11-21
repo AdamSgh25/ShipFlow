@@ -7,13 +7,17 @@ import com.shipflow.gateway_service.dto.Response.UserResponse;
 import com.shipflow.gateway_service.entity.User;
 import com.shipflow.gateway_service.enums.Role;
 import com.shipflow.gateway_service.repository.UserRepository;
-import org.springframework.http.HttpStatus;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.*;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.client.RestClient;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.Map;
 import java.util.UUID;
+
 
 @Service
 public class AuthService {
@@ -21,15 +25,21 @@ public class AuthService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
+    private final RestClient companyRestClient;
 
     public AuthService(
             UserRepository userRepository,
             PasswordEncoder passwordEncoder,
-            JwtService jwtService
+            JwtService jwtService,
+            RestClient.Builder restClientBuilder,
+            @Value("${app.services.company-url:http://localhost:8081}") String companyServiceUrl
     ) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
+        this.companyRestClient = restClientBuilder
+                .baseUrl(companyServiceUrl)
+                .build();
     }
 
     @Transactional
@@ -41,6 +51,28 @@ public class AuthService {
         }
 
         UUID companyId = UUID.randomUUID();
+
+        try {
+            Map<String, Object> payload = Map.of(
+                    "companyId", companyId,
+                    "name", request.companyName().trim(),
+                    "email", request.companyEmail().trim().toLowerCase(),
+                    "phone", request.companyPhone().trim(),
+                    "address", request.companyAddress().trim()
+            );
+
+            companyRestClient.post()
+                    .uri("/internal/companies")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body(payload)
+                    .retrieve()
+                    .toBodilessEntity();
+        } catch (Exception ex) {
+            throw new ResponseStatusException(
+                    HttpStatus.SERVICE_UNAVAILABLE,
+                    "Unable to initialize company profile in company-service"
+            );
+        }
 
         User admin = new User();
         admin.setCompanyId(companyId);
