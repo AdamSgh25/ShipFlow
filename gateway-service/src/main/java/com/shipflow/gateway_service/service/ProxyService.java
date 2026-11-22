@@ -29,14 +29,12 @@ public class ProxyService {
 
 
 
-    public ResponseEntity<byte[]> createDeliveryAgent(
-            HttpServletRequest request,
-            User user
-    ) throws IOException {
+
+    public void createDeliveryAgent(byte[] body, User user) throws IOException {
 
         ObjectMapper mapper = new ObjectMapper();
 
-        JsonNode json = mapper.readTree(request.getInputStream());
+        JsonNode json = mapper.readTree(body);
 
         String email = json.path("email").asText();
         String fullName = json.path("fullName").asText();
@@ -45,8 +43,12 @@ public class ProxyService {
         String companyId = json.path("companyId").asText();
 
         String normalizedEmail = email.trim().toLowerCase();
+
         if (userRepository.existsByEmail(normalizedEmail)) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "User email already exists");
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    "User email already exists"
+            );
         }
 
         String rawPassword = (password != null && !password.isBlank())
@@ -54,7 +56,8 @@ public class ProxyService {
                 : "Agent123!";
 
         User agentUser = new User();
-        agentUser.setCompanyId((UUID.fromString(UUID.randomUUID().toString())));
+
+        agentUser.setCompanyId(UUID.fromString(UUID.randomUUID().toString()));
         agentUser.setCompanyName(companyName);
         agentUser.setFullName(fullName.trim());
         agentUser.setEmail(normalizedEmail);
@@ -62,8 +65,8 @@ public class ProxyService {
         agentUser.setRole(Role.DELIVERY_AGENT);
         agentUser.setTokenId(UUID.randomUUID().toString());
         agentUser.setActive(true);
-        userRepository.save(agentUser);
 
-        return ResponseEntity.ok().build();
+        userRepository.save(agentUser);
     }
+
 }

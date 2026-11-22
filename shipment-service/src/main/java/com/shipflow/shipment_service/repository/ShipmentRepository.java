@@ -33,14 +33,22 @@ public interface ShipmentRepository extends JpaRepository<Shipment, UUID> {
         """)
     List<Object[]> countShipmentsByStatusForCompany(@Param("companyId") UUID companyId);
 
+
     @Query("""
-        SELECT s FROM Shipment s
-        WHERE s.companyId = :companyId
-          AND (:status IS NULL OR s.status = :status)
-          AND (:search IS NULL OR :search = '' OR LOWER(s.trackingNumber) LIKE LOWER(CONCAT('%', :search, '%')))
-          AND (:startOfDay IS NULL OR (s.createdAt >= :startOfDay AND s.createdAt < :endOfDay))
-        ORDER BY s.createdAt DESC
-        """)
+    SELECT s FROM Shipment s
+    WHERE s.companyId = :companyId
+      AND (:status IS NULL OR s.status = :status)
+      AND (:search IS NULL OR :search = ''
+           OR LOWER(s.trackingNumber) LIKE LOWER(CONCAT('%', :search, '%')))
+      AND (
+          CAST(:startOfDay AS timestamp) IS NULL
+          OR (
+              s.createdAt >= :startOfDay
+              AND s.createdAt < :endOfDay
+          )
+      )
+    ORDER BY s.createdAt DESC
+    """)
     Page<Shipment> findCompanyShipments(
             @Param("companyId") UUID companyId,
             @Param("search") String search,
@@ -50,18 +58,18 @@ public interface ShipmentRepository extends JpaRepository<Shipment, UUID> {
             Pageable pageable
     );
 
+
     @Query("""
         SELECT s FROM Shipment s
         WHERE s.companyId = :companyId
           AND s.assignedAgentId = :agentId
           AND (:status IS NULL OR s.status = :status)
-          AND (:search IS NULL OR :search = '' OR LOWER(s.trackingNumber) LIKE LOWER(CONCAT('%', :search, '%')))
-        ORDER BY s.createdAt DESC
+          AND (:searchPattern IS NULL OR LOWER(s.trackingNumber) LIKE :searchPattern)
         """)
     Page<Shipment> findAgentShipments(
             @Param("companyId") UUID companyId,
             @Param("agentId") UUID agentId,
-            @Param("search") String search,
+            @Param("searchPattern") String searchPattern,
             @Param("status") ShipmentStatus status,
             Pageable pageable
     );

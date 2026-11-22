@@ -65,17 +65,18 @@ public class GatewayProxyController {
 
         }
 
-        /**if (HttpMethod.POST.matches(request.getMethod())
+        byte[] body = StreamUtils.copyToByteArray(request.getInputStream());
+
+        if (HttpMethod.POST.matches(request.getMethod())
                 && "/api/delivery-agents".equals(path)) {
 
-            proxyService.createDeliveryAgent(request, user);
-        }**/
+            proxyService.createDeliveryAgent(body, user);
+        }
+
+        HttpMethod method = HttpMethod.valueOf(request.getMethod());
 
         String targetBase = isCompanyRoute ? companyServiceUrl : shipmentServiceUrl;
         URI targetUri = URI.create(targetBase + path + (query != null ? "?" + query : ""));
-
-        byte[] body = StreamUtils.copyToByteArray(request.getInputStream());
-        HttpMethod method = HttpMethod.valueOf(request.getMethod());
 
         try {
             var spec = restClient.method(method)
@@ -90,6 +91,9 @@ public class GatewayProxyController {
                             headers.set("X-User-Role", user.getRole().name());
                             if (user.getCompanyId() != null) {
                                 headers.set("X-Company-Id", user.getCompanyId().toString());
+                            }
+                            if (user.getCompanyName() != null) {
+                                headers.set("X-Company-Name", user.getCompanyName());
                             }
                         }
                     });
