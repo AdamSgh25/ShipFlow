@@ -73,8 +73,9 @@ public class CompanyManagementService {
         if (deliveryAgentRepository.existsByEmail(normalizedEmail)) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Agent email already exists");
         }
-
+        System.out.println(request.agentId());
         DeliveryAgent agent = new DeliveryAgent();
+        agent.setId(request.agentId());
         agent.setCompanyId(companyId);
         agent.setFullName(request.fullName().trim());
         agent.setEmail(normalizedEmail);

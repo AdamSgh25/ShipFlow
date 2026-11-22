@@ -17,7 +17,6 @@ import java.util.UUID;
 public class DeliveryAgent {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
     @Column(name = "company_id", nullable = false)

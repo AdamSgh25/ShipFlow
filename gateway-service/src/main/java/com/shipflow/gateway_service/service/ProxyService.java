@@ -30,7 +30,7 @@ public class ProxyService {
 
 
 
-    public void createDeliveryAgent(byte[] body, User user) throws IOException {
+    public UUID createDeliveryAgent(byte[] body, User user) throws IOException {
 
         ObjectMapper mapper = new ObjectMapper();
 
@@ -57,7 +57,7 @@ public class ProxyService {
 
         User agentUser = new User();
 
-        agentUser.setCompanyId(UUID.fromString(UUID.randomUUID().toString()));
+        agentUser.setCompanyId(user.getCompanyId());
         agentUser.setCompanyName(companyName);
         agentUser.setFullName(fullName.trim());
         agentUser.setEmail(normalizedEmail);
@@ -67,6 +67,9 @@ public class ProxyService {
         agentUser.setActive(true);
 
         userRepository.save(agentUser);
+        System.out.println(agentUser.getId());
+
+        return agentUser.getId();
     }
 
 }
