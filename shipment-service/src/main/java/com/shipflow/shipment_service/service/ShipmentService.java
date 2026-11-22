@@ -198,4 +198,49 @@ public class ShipmentService {
                 shipmentRepository.countByCompanyIdAndStatus(companyId, ShipmentStatus.CANCELLED)
         );
     }
+
+
+    @Transactional
+    public ShipmentResponse updateShipment(
+            UUID companyId,
+            UUID shipmentId,
+            UpdateShipmentRequest request
+    ) {
+
+        Shipment shipment = shipmentRepository
+                .findByIdAndCompanyId(shipmentId, companyId)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "Shipment not found"
+                ));
+
+        shipment.setSenderName(request.senderName().trim());
+        shipment.setSenderPhone(request.senderPhone().trim());
+
+        shipment.setRecipientName(request.recipientName().trim());
+        shipment.setRecipientPhone(request.recipientPhone().trim());
+
+        shipment.setPickupAddress(request.pickupAddress().trim());
+        shipment.setDeliveryAddress(request.deliveryAddress().trim());
+
+        shipment.setCity(request.city());
+        shipment.setCurrentLocation(request.currentLocation());
+        shipment.setDeliveryNotes(request.deliveryNotes());
+
+        shipment.setPackageDescription(
+                request.packageDescription().trim()
+        );
+
+        shipment.setPackageWeight(request.packageWeight());
+        shipment.setShippingPrice(request.shippingPrice());
+
+        shipment.setEstimatedDeliveryDate(
+                request.estimatedDeliveryDate()
+        );
+
+        Shipment updatedShipment = shipmentRepository.save(shipment);
+
+        return ShipmentResponse.fromEntity(updatedShipment);
+    }
+
 }

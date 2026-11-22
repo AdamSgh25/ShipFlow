@@ -109,4 +109,20 @@ public class ShipmentController {
         service.deleteShipment(requireAdminCompanyId(companyId, role), id);
         return ResponseEntity.noContent().build();
     }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<ShipmentResponse> updateShipment(
+            @RequestHeader(value = "X-Company-Id", required = false) String companyId,
+            @RequestHeader(value = "X-User-Role", required = false) String role,
+            @PathVariable UUID id,
+            @Valid @RequestBody UpdateShipmentRequest request
+    ) {
+        return ResponseEntity.ok(
+                service.updateShipment(
+                        requireAdminCompanyId(companyId, role),
+                        id,
+                        request
+                )
+        );
+    }
 }
